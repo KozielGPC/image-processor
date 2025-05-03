@@ -35,6 +35,8 @@ public class NewJFrame extends javax.swing.JFrame {
         rotateImageCounterClockwiseMenuItem = new javax.swing.JMenuItem();
         flipImageVerticalMenuItem = new javax.swing.JMenuItem();
         flipImageHorizontalMenuItem = new javax.swing.JMenuItem();
+        oilPaintMenuItem = new javax.swing.JMenuItem();
+        histogramEqualizationMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -89,6 +91,14 @@ public class NewJFrame extends javax.swing.JFrame {
         flipImageHorizontalMenuItem.setText("Flip Horizontal");
         flipImageHorizontalMenuItem.addActionListener(evt -> flipImage(true, false));
         imageMenu.add(flipImageHorizontalMenuItem);
+
+        oilPaintMenuItem.setText("Oil Paint Effect");
+        oilPaintMenuItem.addActionListener(evt -> applyOilPaintEffect());
+        imageMenu.add(oilPaintMenuItem);
+
+        histogramEqualizationMenuItem.setText("Histogram Equalization");
+        histogramEqualizationMenuItem.addActionListener(evt -> applyHistogramEqualization());
+        imageMenu.add(histogramEqualizationMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -270,7 +280,7 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage);
     }
 
-    // 4. 3. Espelhamento vertical e horizontal; 
+    // 4. 3) Espelhamento vertical e horizontal; 
     private void flipImage(boolean horizontal, boolean vertical) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
@@ -291,6 +301,78 @@ public class NewJFrame extends javax.swing.JFrame {
         currentImage = segmentedImage;
         displayImage(currentImage);
     }
+
+    // 4. 11) Efeito Oil Paint (pintura a óleo); 
+    private void applyOilPaintEffect() {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                int red = originalColor.getRed();
+                int green = originalColor.getGreen();
+                int blue = originalColor.getBlue();
+
+                int newRed = (int) (red * 0.3 + green * 0.59 + blue * 0.11);
+                int newGreen = (int) (red * 0.3 + green * 0.59 + blue * 0.11);
+                int newBlue = (int) (red * 0.3 + green * 0.59 + blue * 0.11);
+
+                segmentedImage.setRGB(x, y, new Color(newRed, newGreen, newBlue).getRGB());
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage);
+    }
+
+    // 4 7) Equalização de histograma; 
+    private void applyHistogramEqualization() {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        int[] histogram = new int[256];
+        int[] cumulativeHistogram = new int[256];
+        BufferedImage equalizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                int red = originalColor.getRed();
+                int green = originalColor.getGreen();
+                int blue = originalColor.getBlue();
+
+                histogram[red]++;
+                histogram[green]++;
+                histogram[blue]++;
+            }
+        }
+
+        cumulativeHistogram[0] = histogram[0];
+        for (int i = 1; i < 256; i++) {
+            cumulativeHistogram[i] = cumulativeHistogram[i - 1] + histogram[i];
+        }
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                int red = originalColor.getRed();
+                int green = originalColor.getGreen();
+                int blue = originalColor.getBlue();
+
+                int newRed = (int) ((double) cumulativeHistogram[red] / (width * height) * 255);
+                int newGreen = (int) ((double) cumulativeHistogram[green] / (width * height) * 255);
+                int newBlue = (int) ((double) cumulativeHistogram[blue] / (width * height) * 255);
+
+                equalizedImage.setRGB(x, y, new Color(newRed, newGreen, newBlue).getRGB());
+            }
+        }
+
+        currentImage = equalizedImage;
+        displayImage(currentImage);
+    }
+
 
     // Display the image on the JLabel
     private void displayImage(BufferedImage image) {
@@ -328,4 +410,6 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem rotateImageCounterClockwiseMenuItem;
     private javax.swing.JMenuItem flipImageVerticalMenuItem;
     private javax.swing.JMenuItem flipImageHorizontalMenuItem;
+    private javax.swing.JMenuItem oilPaintMenuItem;
+    private javax.swing.JMenuItem histogramEqualizationMenuItem;
 }
