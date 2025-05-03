@@ -30,6 +30,7 @@ public class NewJFrame extends javax.swing.JFrame {
         negativeMenuItem = new javax.swing.JMenuItem();
         grayscaleMenuItem = new javax.swing.JMenuItem();
         transparencyMenuItem = new javax.swing.JMenuItem();
+        colorSegmentationMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -64,6 +65,10 @@ public class NewJFrame extends javax.swing.JFrame {
         transparencyMenuItem.setText("Transparency Gradient");
         transparencyMenuItem.addActionListener(evt -> applyTransparencyEffect(evt));
         imageMenu.add(transparencyMenuItem);
+
+        colorSegmentationMenuItem.setText("Color Segmentation");
+        colorSegmentationMenuItem.addActionListener(evt -> applyColorSegmentation(0, 255, 0));
+        imageMenu.add(colorSegmentationMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -185,6 +190,46 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage);
     }
 
+
+    // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
+    // objetos de uma determinada cor e o restante da imagem na cor preta. O usuário deverá entrar com o
+    // RGB da cor desejada. 
+    private void applyColorSegmentation(int targetRed, int targetGreen, int targetBlue) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                
+                
+                int maxValueRed = targetRed + 50;
+                int minValueRed = targetRed - 50;
+                boolean isCloseToRedColor = originalColor.getRed() >= minValueRed && originalColor.getRed() <= maxValueRed;
+
+                int maxValueGreen = targetGreen + 50;
+                int minValueGreen = targetGreen - 50;
+                boolean isCloseToGreenColor = originalColor.getGreen() >= minValueGreen && originalColor.getGreen() <= maxValueGreen;
+
+                int maxValueBlue = targetBlue + 50;
+                int minValueBlue = targetBlue - 50;
+                boolean isCloseToBlueColor = originalColor.getBlue() >= minValueBlue && originalColor.getBlue() <= maxValueBlue;
+
+                boolean isCloseToTargetColor = isCloseToRedColor && isCloseToGreenColor && isCloseToBlueColor;
+                if (isCloseToTargetColor) {
+                    segmentedImage.setRGB(x, y, originalColor.getRGB());
+                } else {
+                    segmentedImage.setRGB(x, y, Color.BLACK.getRGB());
+                }
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage);
+    }
+
+
     // Display the image on the JLabel
     private void displayImage(BufferedImage image) {
         ImageIcon icon = new ImageIcon(image);
@@ -216,4 +261,5 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem negativeMenuItem;
     private javax.swing.JMenuItem grayscaleMenuItem;
     private javax.swing.JMenuItem transparencyMenuItem;
+    private javax.swing.JMenuItem colorSegmentationMenuItem;
 }
