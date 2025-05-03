@@ -31,6 +31,8 @@ public class NewJFrame extends javax.swing.JFrame {
         grayscaleMenuItem = new javax.swing.JMenuItem();
         transparencyMenuItem = new javax.swing.JMenuItem();
         colorSegmentationMenuItem = new javax.swing.JMenuItem();
+        rotateImageClockwiseMenuItem = new javax.swing.JMenuItem();
+        rotateImageCounterClockwiseMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -69,6 +71,14 @@ public class NewJFrame extends javax.swing.JFrame {
         colorSegmentationMenuItem.setText("Color Segmentation");
         colorSegmentationMenuItem.addActionListener(evt -> applyColorSegmentation(0, 255, 0));
         imageMenu.add(colorSegmentationMenuItem);
+
+        rotateImageClockwiseMenuItem.setText("Rotate Clockwise");
+        rotateImageClockwiseMenuItem.addActionListener(evt -> rotateImage90Degrees(true));
+        imageMenu.add(rotateImageClockwiseMenuItem);
+
+        rotateImageCounterClockwiseMenuItem.setText("Rotate Counter-Clockwise");
+        rotateImageCounterClockwiseMenuItem.addActionListener(evt -> rotateImage90Degrees(false));
+        imageMenu.add(rotateImageCounterClockwiseMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -229,6 +239,28 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage);
     }
 
+    // 4. a) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
+    private void rotateImage90Degrees(boolean clockwise) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        System.out.println("Width: " + width + ", Height: " + height);
+
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if(clockwise) {
+                    segmentedImage.setRGB(height - y - 1, x, currentImage.getRGB(x, y)); // Rotate 90 degrees clockwise
+                } else {
+                    segmentedImage.setRGB(y, width - x - 1, currentImage.getRGB(x, y)); // Rotate 90 degrees counter-clockwise
+                }
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage);
+    }
+
 
     // Display the image on the JLabel
     private void displayImage(BufferedImage image) {
@@ -262,4 +294,6 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem grayscaleMenuItem;
     private javax.swing.JMenuItem transparencyMenuItem;
     private javax.swing.JMenuItem colorSegmentationMenuItem;
+    private javax.swing.JMenuItem rotateImageClockwiseMenuItem;
+    private javax.swing.JMenuItem rotateImageCounterClockwiseMenuItem;
 }
