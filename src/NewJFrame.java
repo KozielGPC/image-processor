@@ -11,6 +11,7 @@ public class NewJFrame extends javax.swing.JFrame {
     // Instance variables
     private BufferedImage currentImage; // Stores the currently loaded image
     private boolean isImageDisplayed = false; // Flag to check if an image is displayed
+    private JSlider transparencySlider; // Slider for transparency level
 
     public NewJFrame() {
         initializeComponents();
@@ -67,7 +68,20 @@ public class NewJFrame extends javax.swing.JFrame {
         imageMenu.add(grayscaleMenuItem);
 
         transparencyMenuItem.setText("Transparency Gradient");
-        transparencyMenuItem.addActionListener(evt -> applyTransparencyEffect(evt));
+        transparencyMenuItem.addActionListener(evt -> {
+            if (transparencySlider == null) {
+                transparencySlider = new JSlider(0, 100, 0);
+                transparencySlider.setMajorTickSpacing(20);
+                transparencySlider.setPaintTicks(true);
+                transparencySlider.setPaintLabels(true);
+                transparencySlider.addChangeListener(e -> applyTransparencyEffect(transparencySlider.getValue()));
+                
+                // Add the slider to the frame
+                getContentPane().add(transparencySlider, BorderLayout.SOUTH);
+                pack();
+            }
+            transparencySlider.setVisible(true);
+        });
         imageMenu.add(transparencyMenuItem);
 
         colorSegmentationMenuItem.setText("Color Segmentation");
@@ -192,7 +206,7 @@ public class NewJFrame extends javax.swing.JFrame {
     }
 
     // Apply transparency gradient effect to the image
-    private void applyTransparencyEffect(java.awt.event.ActionEvent evt) {
+    private void applyTransparencyEffect(int alphaValue) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
         BufferedImage transparentImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -200,7 +214,7 @@ public class NewJFrame extends javax.swing.JFrame {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Color originalColor = new Color(currentImage.getRGB(x, y));
-                int alpha = (int) ((1.0 - (double) y / height) * 255); // Gradual transparency from top to bottom
+                int alpha = (int) ((1.0 - (double) alphaValue / 100) * 255);
                 Color transparentColor = new Color(originalColor.getRed(), originalColor.getGreen(), originalColor.getBlue(), alpha);
                 transparentImage.setRGB(x, y, transparentColor.getRGB());
             }
@@ -209,7 +223,6 @@ public class NewJFrame extends javax.swing.JFrame {
         currentImage = transparentImage;
         displayImage(currentImage);
     }
-
 
     // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
     // objetos de uma determinada cor e o restante da imagem na cor preta. O usuário deverá entrar com o
