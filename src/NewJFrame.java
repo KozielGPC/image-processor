@@ -139,7 +139,7 @@ public class NewJFrame extends javax.swing.JFrame {
             File selectedFile = fileChooser.getSelectedFile();
             try {
                 currentImage = ImageIO.read(selectedFile);
-                displayImage(currentImage);
+                displayImage(currentImage, true);
                 System.out.println("Image opened successfully!");
             } catch (IOException e) {
                 System.out.println("Error: Unable to open the image file.");
@@ -186,7 +186,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 currentImage.setRGB(x, y, negativeColor.getRGB());
             }
         }
-        displayImage(currentImage);
+        displayImage(currentImage, true);
     }
 
     // Apply grayscale effect to the image
@@ -202,7 +202,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 currentImage.setRGB(x, y, grayColor.getRGB());
             }
         }
-        displayImage(currentImage);
+        displayImage(currentImage, true);
     }
 
     // Apply transparency gradient effect to the image
@@ -221,7 +221,7 @@ public class NewJFrame extends javax.swing.JFrame {
         }
 
         currentImage = transparentImage;
-        displayImage(currentImage);
+        displayImage(currentImage, false);
     }
 
     // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
@@ -259,7 +259,7 @@ public class NewJFrame extends javax.swing.JFrame {
         }
 
         currentImage = segmentedImage;
-        displayImage(currentImage);
+        displayImage(currentImage, true);
     }
 
     // 4. 1) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
@@ -280,7 +280,7 @@ public class NewJFrame extends javax.swing.JFrame {
         }
 
         currentImage = segmentedImage;
-        displayImage(currentImage);
+        displayImage(currentImage, true);
     }
 
     // 4. 3. Espelhamento vertical e horizontal; 
@@ -302,11 +302,11 @@ public class NewJFrame extends javax.swing.JFrame {
         }
 
         currentImage = segmentedImage;
-        displayImage(currentImage);
+        displayImage(currentImage, true);
     }
 
     // Display the image on the JLabel
-    private void displayImage(BufferedImage image) {
+    private void displayImage(BufferedImage image, boolean resize) {
         ImageIcon icon = new ImageIcon(image);
         if (!isImageDisplayed) {
             imageLabel.setIcon(icon);
@@ -317,7 +317,9 @@ public class NewJFrame extends javax.swing.JFrame {
         } else {
             imageLabel.setIcon(icon);
         }
-        setSize(image.getWidth() + 25, image.getHeight() + 70);
+        if (resize) {
+            setSize(image.getWidth() + 25, image.getHeight() + 70);
+        }
     }
 
     // Main method to run the application
