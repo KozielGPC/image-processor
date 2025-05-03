@@ -8,7 +8,6 @@
  */
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +45,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jMenu1.setText("Arquivo");
 
-        jMenuItem1.setLabel("Abrir...");
+        jMenuItem1.setText("Abrir...");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
@@ -54,7 +53,7 @@ public class NewJFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
-        jMenuItem2.setLabel("Salvar...");
+        jMenuItem2.setText("Salvar...");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -62,7 +61,7 @@ public class NewJFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem2);
 
-        jMenuItem3.setLabel("Sair");
+        jMenuItem3.setText("Sair");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem3ActionPerformed(evt);
@@ -74,7 +73,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jMenu2.setText("Imagem");
 
-        jMenuItem4.setLabel("Negativo");
+        jMenuItem4.setText("Negativo");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem4ActionPerformed(evt);
