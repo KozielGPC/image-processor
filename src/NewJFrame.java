@@ -33,6 +33,8 @@ public class NewJFrame extends javax.swing.JFrame {
         colorSegmentationMenuItem = new javax.swing.JMenuItem();
         rotateImageClockwiseMenuItem = new javax.swing.JMenuItem();
         rotateImageCounterClockwiseMenuItem = new javax.swing.JMenuItem();
+        flipImageVerticalMenuItem = new javax.swing.JMenuItem();
+        flipImageHorizontalMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -79,6 +81,14 @@ public class NewJFrame extends javax.swing.JFrame {
         rotateImageCounterClockwiseMenuItem.setText("Rotate Counter-Clockwise");
         rotateImageCounterClockwiseMenuItem.addActionListener(evt -> rotateImage90Degrees(false));
         imageMenu.add(rotateImageCounterClockwiseMenuItem);
+
+        flipImageVerticalMenuItem.setText("Flip Vertical");
+        flipImageVerticalMenuItem.addActionListener(evt -> flipImage(false, true));
+        imageMenu.add(flipImageVerticalMenuItem);
+
+        flipImageHorizontalMenuItem.setText("Flip Horizontal");
+        flipImageHorizontalMenuItem.addActionListener(evt -> flipImage(true, false));
+        imageMenu.add(flipImageHorizontalMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -239,11 +249,10 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage);
     }
 
-    // 4. a) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
+    // 4. 1) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
     private void rotateImage90Degrees(boolean clockwise) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
-        System.out.println("Width: " + width + ", Height: " + height);
 
         BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
@@ -261,6 +270,27 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage);
     }
 
+    // 4. 3. Espelhamento vertical e horizontal; 
+    private void flipImage(boolean horizontal, boolean vertical) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if(horizontal) {
+                    segmentedImage.setRGB(width - x - 1, y, currentImage.getRGB(x, y)); // Horizontal flip
+                }
+                if(vertical) {
+                    segmentedImage.setRGB(x, height - y - 1, currentImage.getRGB(x, y)); // Vertical flip
+                }
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage);
+    }
 
     // Display the image on the JLabel
     private void displayImage(BufferedImage image) {
@@ -296,4 +326,6 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem colorSegmentationMenuItem;
     private javax.swing.JMenuItem rotateImageClockwiseMenuItem;
     private javax.swing.JMenuItem rotateImageCounterClockwiseMenuItem;
+    private javax.swing.JMenuItem flipImageVerticalMenuItem;
+    private javax.swing.JMenuItem flipImageHorizontalMenuItem;
 }
