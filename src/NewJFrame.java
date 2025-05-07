@@ -129,7 +129,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
     // Open image file
     private void openImage(java.awt.event.ActionEvent evt) {
-        JFileChooser fileChooser = new JFileChooser();
+        JFileChooser fileChooser = new JFileChooser(new File("images")); 
         FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
         fileChooser.setFileFilter(filter);
         fileChooser.setDialogTitle("Open Image");
@@ -267,19 +267,20 @@ public class NewJFrame extends javax.swing.JFrame {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
 
-        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        // Necessário para quando imagem não for quadrada
+        BufferedImage rotatedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if(clockwise) {
-                    segmentedImage.setRGB(height - y - 1, x, currentImage.getRGB(x, y)); // Rotate 90 degrees clockwise
+                if (clockwise) {
+                    rotatedImage.setRGB(height - y - 1, x, currentImage.getRGB(x, y)); // Rotate 90 degrees clockwise
                 } else {
-                    segmentedImage.setRGB(y, width - x - 1, currentImage.getRGB(x, y)); // Rotate 90 degrees counter-clockwise
+                    rotatedImage.setRGB(y, width - x - 1, currentImage.getRGB(x, y)); // Rotate 90 degrees counter-clockwise
                 }
             }
         }
 
-        currentImage = segmentedImage;
+        currentImage = rotatedImage;
         displayImage(currentImage, true);
     }
 
