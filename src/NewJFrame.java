@@ -174,7 +174,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
     // Save image file
     private void saveImage(java.awt.event.ActionEvent evt) {
-        JFileChooser fileChooser = new JFileChooser();
+        JFileChooser fileChooser = new JFileChooser(new File("images"));	
         FileNameExtensionFilter filter = new FileNameExtensionFilter("JPG Images", "jpg");
         fileChooser.setFileFilter(filter);
         fileChooser.setDialogTitle("Save Image");
