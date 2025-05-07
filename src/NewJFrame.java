@@ -36,6 +36,7 @@ public class NewJFrame extends javax.swing.JFrame {
         rotateImageCounterClockwiseMenuItem = new javax.swing.JMenuItem();
         flipImageVerticalMenuItem = new javax.swing.JMenuItem();
         flipImageHorizontalMenuItem = new javax.swing.JMenuItem();
+        transparencyWithTwoImagesMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -103,6 +104,30 @@ public class NewJFrame extends javax.swing.JFrame {
         flipImageHorizontalMenuItem.setText("Flip Horizontal");
         flipImageHorizontalMenuItem.addActionListener(evt -> flipImage(true, false));
         imageMenu.add(flipImageHorizontalMenuItem);
+
+        transparencyWithTwoImagesMenuItem.setText("Transparency with Two Images");
+        transparencyWithTwoImagesMenuItem.addActionListener(evt -> {
+            JFileChooser fileChooser = new JFileChooser(new File("images"));
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
+            fileChooser.setFileFilter(filter);
+            fileChooser.setDialogTitle("Open Second Image");
+            int option = fileChooser.showOpenDialog(this);
+
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                try {
+                    BufferedImage secondImage = ImageIO.read(selectedFile);
+                    if (currentImage.getWidth() == secondImage.getWidth() && currentImage.getHeight() == secondImage.getHeight()) {
+                        applyTransparencyEffectWithTwoImages(currentImage, secondImage);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Images must have the same dimensions.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error loading the second image.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        imageMenu.add(transparencyWithTwoImagesMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -205,7 +230,10 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage, true);
     }
 
-    // Apply transparency gradient effect to the image
+    // 1. Desenvolver os métodos abaixo:
+    // a) Carregar uma imagem no formato RGB e aplicar transparência com a cor preta RGB=(0, 0, 0),
+    // alterando gradativamente o valor do (alpha) de 1 até 0. Iniciar com o preto opaco até ficar
+    // totalmente transparente permitindo visualizar a imagem carregada.
     private void applyTransparencyEffect(int alphaValue) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
@@ -222,6 +250,73 @@ public class NewJFrame extends javax.swing.JFrame {
 
         currentImage = transparentImage;
         displayImage(currentImage, false);
+    }
+
+    // 1. b)  Carregar duas imagens no formato RGB, de mesmo tamanho, e sobrepor as imagens alterando
+    // gradativamente o valor do (alpha) de 1 até 0. 
+    //  Fórmula para mistura:
+    //  R’ = R1*(1-α) + R2*α
+    //  G’ = G1*(1-α) + G2*α
+    //  B’ = B1*(1-α) + B2*α
+    // A alteração do valor do α pode ser feita utilizando a opção do menu, ou uma tecla de atalho ou uma
+    // função sleep(). 
+    private void applyTransparencyEffectWithTwoImages(BufferedImage image1, BufferedImage image2) {
+        int width = image1.getWidth();
+        int height = image1.getHeight();
+
+        // Create a new frame to display the two images side by side
+        JFrame sideBySideFrame = new JFrame("Images Side by Side");
+        sideBySideFrame.setLayout(new GridLayout(1, 2));
+
+        JLabel image1Label = new JLabel(new ImageIcon(image1));
+        JLabel image2Label = new JLabel(new ImageIcon(image2));
+
+        sideBySideFrame.add(new JScrollPane(image1Label));
+        sideBySideFrame.add(new JScrollPane(image2Label));
+
+        sideBySideFrame.pack();
+        sideBySideFrame.setVisible(true);
+
+        // Create another frame to display the blended image with a slider
+        JFrame blendedFrame = new JFrame("Blended Image");
+        blendedFrame.setLayout(new BorderLayout());
+
+        JLabel blendedImageLabel = new JLabel();
+        blendedFrame.add(new JScrollPane(blendedImageLabel), BorderLayout.CENTER);
+
+        JSlider alphaSlider = new JSlider(0, 100, 50);
+        alphaSlider.setMajorTickSpacing(20);
+        alphaSlider.setPaintTicks(true);
+        alphaSlider.setPaintLabels(true);
+
+        alphaSlider.addChangeListener(e -> {
+            int alphaValue = alphaSlider.getValue();
+            BufferedImage blendedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    Color color1 = new Color(image1.getRGB(x, y));
+                    Color color2 = new Color(image2.getRGB(x, y));
+
+                    double alpha = alphaValue / 100.0;
+                    int red = (int) (color1.getRed() * (1 - alpha) + color2.getRed() * alpha);
+                    int green = (int) (color1.getGreen() * (1 - alpha) + color2.getGreen() * alpha);
+                    int blue = (int) (color1.getBlue() * (1 - alpha) + color2.getBlue() * alpha);
+
+                    Color blendedColor = new Color(red, green, blue);
+                    blendedImage.setRGB(x, y, blendedColor.getRGB());
+                }
+            }
+
+            blendedImageLabel.setIcon(new ImageIcon(blendedImage));
+        });
+
+        blendedFrame.add(alphaSlider, BorderLayout.SOUTH);
+        blendedFrame.pack();
+        blendedFrame.setVisible(true);
+
+        // Trigger the initial blending
+        alphaSlider.setValue(50);
     }
 
     // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
@@ -344,4 +439,5 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem rotateImageCounterClockwiseMenuItem;
     private javax.swing.JMenuItem flipImageVerticalMenuItem;
     private javax.swing.JMenuItem flipImageHorizontalMenuItem;
+    private javax.swing.JMenuItem transparencyWithTwoImagesMenuItem;
 }
