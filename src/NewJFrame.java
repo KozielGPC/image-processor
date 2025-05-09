@@ -86,7 +86,23 @@ public class NewJFrame extends javax.swing.JFrame {
         imageMenu.add(transparencyMenuItem);
 
         colorSegmentationMenuItem.setText("Color Segmentation");
-        colorSegmentationMenuItem.addActionListener(evt -> applyColorSegmentation(0, 255, 0));
+        colorSegmentationMenuItem.addActionListener(evt -> {
+            JColorChooser colorChooser = new JColorChooser();
+            JDialog colorDialog = JColorChooser.createDialog(this, "Select Target Color", true, colorChooser, e -> {
+                Color selectedColor = colorChooser.getColor();
+                if (selectedColor != null) {
+                    applyColorSegmentation(selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue());
+                }
+            }, null);
+
+            // Hide other UI components if necessary
+            if (transparencySlider != null) {
+                transparencySlider.setVisible(false);
+            }
+
+            // Show the color picker dialog
+            colorDialog.setVisible(true);
+        });
         imageMenu.add(colorSegmentationMenuItem);
 
         rotateImageClockwiseMenuItem.setText("Rotate Clockwise");
