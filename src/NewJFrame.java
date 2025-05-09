@@ -95,12 +95,10 @@ public class NewJFrame extends javax.swing.JFrame {
                 }
             }, null);
 
-            // Hide other UI components if necessary
             if (transparencySlider != null) {
                 transparencySlider.setVisible(false);
             }
 
-            // Show the color picker dialog
             colorDialog.setVisible(true);
         });
         imageMenu.add(colorSegmentationMenuItem);
