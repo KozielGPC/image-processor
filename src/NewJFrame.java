@@ -25,6 +25,8 @@ public class NewJFrame extends javax.swing.JFrame {
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
+        openPPMMenuItem = new javax.swing.JMenuItem();
+        openPGMMenuItem = new javax.swing.JMenuItem();
         saveMenuItem = new javax.swing.JMenuItem();
         exitMenuItem = new javax.swing.JMenuItem();
         imageMenu = new javax.swing.JMenu();
@@ -46,6 +48,14 @@ public class NewJFrame extends javax.swing.JFrame {
         openMenuItem.setText("Open...");
         openMenuItem.addActionListener(evt -> openImage(evt));
         fileMenu.add(openMenuItem);
+
+        openPPMMenuItem.setText("Open PPM...");
+        openPPMMenuItem.addActionListener(evt -> openPPMImage());
+        fileMenu.add(openPPMMenuItem);
+
+        openPGMMenuItem.setText("Open PGM...");
+        openPGMMenuItem.addActionListener(evt -> openPGMImage());
+        fileMenu.add(openPGMMenuItem);
 
         saveMenuItem.setText("Save...");
         saveMenuItem.addActionListener(evt -> saveImage(evt));
@@ -69,38 +79,11 @@ public class NewJFrame extends javax.swing.JFrame {
         imageMenu.add(grayscaleMenuItem);
 
         transparencyMenuItem.setText("Transparency Gradient");
-        transparencyMenuItem.addActionListener(evt -> {
-            if (transparencySlider == null) {
-                transparencySlider = new JSlider(0, 100, 0);
-                transparencySlider.setMajorTickSpacing(20);
-                transparencySlider.setPaintTicks(true);
-                transparencySlider.setPaintLabels(true);
-                transparencySlider.addChangeListener(e -> applyTransparencyEffect(transparencySlider.getValue()));
-                
-                // Add the slider to the frame
-                getContentPane().add(transparencySlider, BorderLayout.SOUTH);
-                pack();
-            }
-            transparencySlider.setVisible(true);
-        });
+        transparencyMenuItem.addActionListener(evt -> buildTransparencyEffect());
         imageMenu.add(transparencyMenuItem);
 
         colorSegmentationMenuItem.setText("Color Segmentation");
-        colorSegmentationMenuItem.addActionListener(evt -> {
-            JColorChooser colorChooser = new JColorChooser();
-            JDialog colorDialog = JColorChooser.createDialog(this, "Select Target Color", true, colorChooser, e -> {
-                Color selectedColor = colorChooser.getColor();
-                if (selectedColor != null) {
-                    applyColorSegmentation(selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue());
-                }
-            }, null);
-
-            if (transparencySlider != null) {
-                transparencySlider.setVisible(false);
-            }
-
-            colorDialog.setVisible(true);
-        });
+        colorSegmentationMenuItem.addActionListener(evt -> buildColorSegmentationEffect());
         imageMenu.add(colorSegmentationMenuItem);
 
         rotateImageClockwiseMenuItem.setText("Rotate Clockwise");
@@ -120,27 +103,7 @@ public class NewJFrame extends javax.swing.JFrame {
         imageMenu.add(flipImageHorizontalMenuItem);
 
         transparencyWithTwoImagesMenuItem.setText("Transparency with Two Images");
-        transparencyWithTwoImagesMenuItem.addActionListener(evt -> {
-            JFileChooser fileChooser = new JFileChooser(new File("images"));
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
-            fileChooser.setFileFilter(filter);
-            fileChooser.setDialogTitle("Open Second Image");
-            int option = fileChooser.showOpenDialog(this);
-
-            if (option == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                try {
-                    BufferedImage secondImage = ImageIO.read(selectedFile);
-                    if (currentImage.getWidth() == secondImage.getWidth() && currentImage.getHeight() == secondImage.getHeight()) {
-                        applyTransparencyEffectWithTwoImages(currentImage, secondImage);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Images must have the same dimensions.", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(this, "Error loading the second image.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        transparencyWithTwoImagesMenuItem.addActionListener(evt -> buildTwoImagesTransparencyEffect());
         imageMenu.add(transparencyWithTwoImagesMenuItem);
 
         menuBar.add(imageMenu);
@@ -166,6 +129,44 @@ public class NewJFrame extends javax.swing.JFrame {
         pack();
     }
 
+
+    private void buildTwoImagesTransparencyEffect() {
+        JFileChooser fileChooser = new JFileChooser(new File("images"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setDialogTitle("Open Second Image");
+        int option = fileChooser.showOpenDialog(this);
+
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try {
+                BufferedImage secondImage = ImageIO.read(selectedFile);
+                if (currentImage.getWidth() == secondImage.getWidth() && currentImage.getHeight() == secondImage.getHeight()) {
+                    applyTransparencyEffectWithTwoImages(currentImage, secondImage);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Images must have the same dimensions.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error loading the second image.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void buildTransparencyEffect() {
+        if (transparencySlider == null) {
+            transparencySlider = new JSlider(0, 100, 0);
+            transparencySlider.setMajorTickSpacing(20);
+            transparencySlider.setPaintTicks(true);
+            transparencySlider.setPaintLabels(true);
+            transparencySlider.addChangeListener(e -> applyTransparencyEffect(transparencySlider.getValue()));
+            
+            // Add the slider to the frame
+            getContentPane().add(transparencySlider, BorderLayout.SOUTH);
+            pack();
+        }
+        transparencySlider.setVisible(true);
+    }
+
     // Open image file
     private void openImage(java.awt.event.ActionEvent evt) {
         JFileChooser fileChooser = new JFileChooser(new File("images")); 
@@ -188,19 +189,24 @@ public class NewJFrame extends javax.swing.JFrame {
 
     // Save image file
     private void saveImage(java.awt.event.ActionEvent evt) {
-        JFileChooser fileChooser = new JFileChooser(new File("images"));	
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("JPG Images", "jpg");
+        JFileChooser fileChooser = new JFileChooser(new File("images"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "png", "bmp", "gif");
         fileChooser.setFileFilter(filter);
         fileChooser.setDialogTitle("Save Image");
         int option = fileChooser.showSaveDialog(this);
 
         if (option == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
+            String fileName = selectedFile.getName();
+            String format = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+
             try {
-                ImageIO.write(currentImage, "jpg", selectedFile);
+                if (!ImageIO.write(currentImage, format, selectedFile)) {
+                    throw new IOException("Unsupported file format");
+                }
                 System.out.println("Image saved successfully!");
             } catch (IOException e) {
-                System.out.println("Error: Unable to save the image file.");
+                JOptionPane.showMessageDialog(this, "Error saving the image file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -415,6 +421,194 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage, true);
     }
 
+
+    private void openPPMImage() {
+        JFileChooser fileChooser = new JFileChooser(new File("images"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("PPM Images", "ppm");
+        fileChooser.setFileFilter(filter);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            readPPMImage2(fileChooser.getSelectedFile());
+        }
+    }
+
+    private static final char START_OF_COMMENT = '#';
+	private static final char SPACE_CHARACTER = ' ';
+	private static final char END_OF_LINE = '\n';
+
+    private static BufferedInputStream reader;
+    private static int processCharacters(char aChar) throws IOException {
+		StringBuilder characters = new StringBuilder();
+		char ch;		
+		while ( ( ch = (char) reader.read() ) != aChar ) {
+        	if ( ch == START_OF_COMMENT ) {
+        		while ( reader.read() != END_OF_LINE );
+        		continue;
+        	}
+        	characters.append(ch);
+        }
+		return Integer.valueOf(characters.toString());
+	}
+
+
+    private void readPPMImage2(File file){
+        try {
+            reader = new BufferedInputStream( new FileInputStream(file.getAbsolutePath()) );
+            final char header1 = (char) reader.read();
+            final char header2 = (char) reader.read();
+            final char header3 = (char) reader.read();
+
+            if (header1 != 'P' || header2 != '6' || header3 != END_OF_LINE) {
+                System.out.println("Error: Invalid PPM format.");
+                return;
+            }
+            
+            final int width = processCharacters(SPACE_CHARACTER);  
+            final int height = processCharacters(END_OF_LINE);
+            final int maxColorValue = processCharacters(END_OF_LINE);
+
+            if ( maxColorValue < 0 || maxColorValue > 255 ) {
+                reader.close();
+                throw new IllegalArgumentException("Maximum color value is outside the range 0..255");
+            }   
+
+            // Remove any comments before reading data
+            reader.mark(1);
+            while ( reader.read() == START_OF_COMMENT ) {
+                while ( reader.read() != END_OF_LINE );
+                reader.mark(1);
+            }
+            reader.reset();
+
+            // Read data
+            BufferedImage bitmap = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        
+            byte[] buffer = new byte[width * 3];
+            for ( int y = 0; y < height; y++ ) {
+                reader.read(buffer, 0, buffer.length);
+                for ( int x = 0; x < width; x++ ) {                	
+                    Color color = new Color(Byte.toUnsignedInt(buffer[x * 3]),
+                                            Byte.toUnsignedInt(buffer[x * 3 + 1]),
+                                            Byte.toUnsignedInt(buffer[x * 3 + 2]));
+                    bitmap.setRGB(x, y, color.getRGB());
+                }
+            }
+            
+            reader.close();
+
+            currentImage = bitmap;
+            displayImage(currentImage, true);
+            // applyGrayscaleEffect(null);
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading PPM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Function to read a PPM P6 image
+    private void readPPMImage(File file) {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            // Read header
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+            String format = br.readLine();
+            if (!"P6".equals(format)) {
+                throw new IOException("Invalid PPM format");
+            }
+
+            // Skip comments
+            String line;
+            do {
+                line = br.readLine();
+            } while (line.startsWith("#"));
+
+            // Read dimensions
+            String[] dimensions = line.split(" ");
+            int width = Integer.parseInt(dimensions[0]);
+            int height = Integer.parseInt(dimensions[1]);
+
+            // Read max color value
+            int maxColor = Integer.parseInt(br.readLine());
+            if (maxColor != 255) {
+                throw new IOException("Unsupported max color value");
+            }
+
+            // Read pixel data
+            byte[] pixelData = fis.readAllBytes();
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            int index = 0;
+            for (int y = 0; y < height - 1; y++) {
+                for (int x = 0; x < width - 1; x++) {
+                    int r = pixelData[index++] & 0xFF;
+                    int g = pixelData[index++] & 0xFF;
+                    int b = pixelData[index++] & 0xFF;
+                    int rgb = (r << 16) | (g << 8) | b;
+                    image.setRGB(x, y, rgb);
+                }
+            }
+
+            currentImage = image;
+            displayImage(currentImage, true);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading PPM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void openPGMImage() {
+        JFileChooser fileChooser = new JFileChooser(new File("images"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("PGM Images", "pgm");
+        fileChooser.setFileFilter(filter);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            readPGMImage(fileChooser.getSelectedFile());
+        }
+    }
+    
+    // Function to read a PGM P5 image
+    private void readPGMImage(File file) {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            // Read header
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+            String format = br.readLine();
+            if (!"P5".equals(format)) {
+                throw new IOException("Invalid PGM format");
+            }
+
+            // Skip comments
+            String line;
+            do {
+                line = br.readLine();
+            } while (line.startsWith("#"));
+
+            // Read dimensions
+            String[] dimensions = line.split(" ");
+            int width = Integer.parseInt(dimensions[0]);
+            int height = Integer.parseInt(dimensions[1]);
+
+            // Read max gray value
+            int maxGray = Integer.parseInt(br.readLine());
+            if (maxGray != 255) {
+                throw new IOException("Unsupported max gray value");
+            }
+
+            // Read pixel data
+            byte[] pixelData = fis.readAllBytes();
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+            int index = 0;
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int gray = pixelData[index++] & 0xFF;
+                    int rgb = (gray << 16) | (gray << 8) | gray;
+                    image.setRGB(x, y, rgb);
+                }
+            }
+
+            currentImage = image;
+            displayImage(currentImage, true);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading PGM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Display the image on the JLabel
     private void displayImage(BufferedImage image, boolean resize) {
         ImageIcon icon = new ImageIcon(image);
@@ -432,6 +626,22 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
 
+    private void buildColorSegmentationEffect() {
+        JColorChooser colorChooser = new JColorChooser();
+        JDialog colorDialog = JColorChooser.createDialog(this, "Select Target Color", true, colorChooser, e -> {
+            Color selectedColor = colorChooser.getColor();
+            if (selectedColor != null) {
+                applyColorSegmentation(selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue());
+            }
+        }, null);
+
+        if (transparencySlider != null) {
+            transparencySlider.setVisible(false);
+        }
+
+        colorDialog.setVisible(true);
+    }
+
     // Main method to run the application
     public static void main(String[] args) {
         java.awt.EventQueue.invokeLater(() -> new NewJFrame().setVisible(true));
@@ -443,6 +653,8 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu imageMenu;
     private javax.swing.JMenuItem openMenuItem;
+    private javax.swing.JMenuItem openPPMMenuItem;
+    private javax.swing.JMenuItem openPGMMenuItem;
     private javax.swing.JMenuItem saveMenuItem;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JMenuItem negativeMenuItem;
