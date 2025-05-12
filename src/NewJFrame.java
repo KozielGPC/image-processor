@@ -1,4 +1,3 @@
-// Import necessary libraries
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -7,8 +6,6 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class NewJFrame extends javax.swing.JFrame {
-
-    // Instance variables
     private BufferedImage currentImage; // Stores the currently loaded image
     private boolean isImageDisplayed = false; // Flag to check if an image is displayed
     private JSlider transparencySlider; // Slider for transparency level
@@ -20,7 +17,6 @@ public class NewJFrame extends javax.swing.JFrame {
     // Initialize UI components
     @SuppressWarnings("unchecked")
     private void initializeComponents() {
-
         imageLabel = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
@@ -129,46 +125,10 @@ public class NewJFrame extends javax.swing.JFrame {
         pack();
     }
 
+    // =================== Helper Methods ======================
 
-    private void buildTwoImagesTransparencyEffect() {
-        JFileChooser fileChooser = new JFileChooser(new File("images"));
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
-        fileChooser.setFileFilter(filter);
-        fileChooser.setDialogTitle("Open Second Image");
-        int option = fileChooser.showOpenDialog(this);
-
-        if (option == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            try {
-                BufferedImage secondImage = ImageIO.read(selectedFile);
-                if (currentImage.getWidth() == secondImage.getWidth() && currentImage.getHeight() == secondImage.getHeight()) {
-                    applyTransparencyEffectWithTwoImages(currentImage, secondImage);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Images must have the same dimensions.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error loading the second image.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private void buildTransparencyEffect() {
-        if (transparencySlider == null) {
-            transparencySlider = new JSlider(0, 100, 0);
-            transparencySlider.setMajorTickSpacing(20);
-            transparencySlider.setPaintTicks(true);
-            transparencySlider.setPaintLabels(true);
-            transparencySlider.addChangeListener(e -> applyTransparencyEffect(transparencySlider.getValue()));
-            
-            // Add the slider to the frame
-            getContentPane().add(transparencySlider, BorderLayout.SOUTH);
-            pack();
-        }
-        transparencySlider.setVisible(true);
-    }
-
-    // Open image file
-    private void openImage(java.awt.event.ActionEvent evt) {
+     // Open image file
+     private void openImage(java.awt.event.ActionEvent evt) {
         JFileChooser fileChooser = new JFileChooser(new File("images")); 
         FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
         fileChooser.setFileFilter(filter);
@@ -211,10 +171,42 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
 
-    // Exit application
-    private void exitApplication(java.awt.event.ActionEvent evt) {
-        System.exit(0);
+    // Display the image on the JLabel
+    private void displayImage(BufferedImage image, boolean resize) {
+        ImageIcon icon = new ImageIcon(image);
+        if (!isImageDisplayed) {
+            imageLabel.setIcon(icon);
+            Container contentPane = getContentPane();
+            contentPane.setLayout(new GridLayout());
+            contentPane.add(new JScrollPane(imageLabel));
+            isImageDisplayed = true;
+        } else {
+            imageLabel.setIcon(icon);
+        }
+        if (resize) {
+            setSize(image.getWidth() + 25, image.getHeight() + 70);
+        }
     }
+
+    private static final char START_OF_COMMENT = '#';
+	private static final char SPACE_CHARACTER = ' ';
+	private static final char END_OF_LINE = '\n';
+
+    private static BufferedInputStream reader;
+    private static int processCharacters(char aChar) throws IOException {
+		StringBuilder characters = new StringBuilder();
+		char ch;		
+		while ( ( ch = (char) reader.read() ) != aChar ) {
+        	if ( ch == START_OF_COMMENT ) {
+        		while ( reader.read() != END_OF_LINE );
+        		continue;
+        	}
+        	characters.append(ch);
+        }
+		return Integer.valueOf(characters.toString());
+	}
+
+    // ==================== Image manipulation methods ======================
 
     // Apply negative effect to the image
     private void applyNegativeEffect(java.awt.event.ActionEvent evt) {
@@ -234,8 +226,8 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage, true);
     }
 
-    // Apply grayscale effect to the image
-    private void applyGrayscaleEffect(java.awt.event.ActionEvent evt) {
+     // Apply grayscale effect to the image
+     private void applyGrayscaleEffect(java.awt.event.ActionEvent evt) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
 
@@ -254,6 +246,21 @@ public class NewJFrame extends javax.swing.JFrame {
     // a) Carregar uma imagem no formato RGB e aplicar transparência com a cor preta RGB=(0, 0, 0),
     // alterando gradativamente o valor do (alpha) de 1 até 0. Iniciar com o preto opaco até ficar
     // totalmente transparente permitindo visualizar a imagem carregada.
+    private void buildTransparencyEffect() {
+        if (transparencySlider == null) {
+            transparencySlider = new JSlider(0, 100, 0);
+            transparencySlider.setMajorTickSpacing(20);
+            transparencySlider.setPaintTicks(true);
+            transparencySlider.setPaintLabels(true);
+            transparencySlider.addChangeListener(e -> applyTransparencyEffect(transparencySlider.getValue()));
+            
+            // Add the slider to the frame
+            getContentPane().add(transparencySlider, BorderLayout.SOUTH);
+            pack();
+        }
+        transparencySlider.setVisible(true);
+    }
+
     private void applyTransparencyEffect(int alphaValue) {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
@@ -272,6 +279,7 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage, false);
     }
 
+
     // 1. b)  Carregar duas imagens no formato RGB, de mesmo tamanho, e sobrepor as imagens alterando
     // gradativamente o valor do (alpha) de 1 até 0. 
     //  Fórmula para mistura:
@@ -280,6 +288,28 @@ public class NewJFrame extends javax.swing.JFrame {
     //  B’ = B1*(1-α) + B2*α
     // A alteração do valor do α pode ser feita utilizando a opção do menu, ou uma tecla de atalho ou uma
     // função sleep(). 
+    private void buildTwoImagesTransparencyEffect() {
+        JFileChooser fileChooser = new JFileChooser(new File("images"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP, JPG, PNG & GIF Images", "bmp", "jpg", "png", "gif");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setDialogTitle("Open Second Image");
+        int option = fileChooser.showOpenDialog(this);
+
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try {
+                BufferedImage secondImage = ImageIO.read(selectedFile);
+                if (currentImage.getWidth() == secondImage.getWidth() && currentImage.getHeight() == secondImage.getHeight()) {
+                    applyTransparencyEffectWithTwoImages(currentImage, secondImage);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Images must have the same dimensions.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error loading the second image.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     private void applyTransparencyEffectWithTwoImages(BufferedImage image1, BufferedImage image2) {
         int width = image1.getWidth();
         int height = image1.getHeight();
@@ -339,89 +369,19 @@ public class NewJFrame extends javax.swing.JFrame {
         alphaSlider.setValue(50);
     }
 
-    // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
-    // objetos de uma determinada cor e o restante da imagem na cor preta. O usuário deverá entrar com o
-    // RGB da cor desejada. 
-    private void applyColorSegmentation(int targetRed, int targetGreen, int targetBlue) {
-        int width = currentImage.getWidth();
-        int height = currentImage.getHeight();
-        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                Color originalColor = new Color(currentImage.getRGB(x, y));
-                
-                
-                int maxValueRed = targetRed + 50;
-                int minValueRed = targetRed - 50;
-                boolean isCloseToRedColor = originalColor.getRed() >= minValueRed && originalColor.getRed() <= maxValueRed;
-
-                int maxValueGreen = targetGreen + 50;
-                int minValueGreen = targetGreen - 50;
-                boolean isCloseToGreenColor = originalColor.getGreen() >= minValueGreen && originalColor.getGreen() <= maxValueGreen;
-
-                int maxValueBlue = targetBlue + 50;
-                int minValueBlue = targetBlue - 50;
-                boolean isCloseToBlueColor = originalColor.getBlue() >= minValueBlue && originalColor.getBlue() <= maxValueBlue;
-
-                boolean isCloseToTargetColor = isCloseToRedColor && isCloseToGreenColor && isCloseToBlueColor;
-                if (isCloseToTargetColor) {
-                    segmentedImage.setRGB(x, y, originalColor.getRGB());
-                } else {
-                    segmentedImage.setRGB(x, y, Color.BLACK.getRGB());
-                }
-            }
-        }
-
-        currentImage = segmentedImage;
-        displayImage(currentImage, true);
-    }
-
-    // 4. 1) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
-    private void rotateImage90Degrees(boolean clockwise) {
-        int width = currentImage.getWidth();
-        int height = currentImage.getHeight();
-
-        // Necessário para quando imagem não for quadrada
-        BufferedImage rotatedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (clockwise) {
-                    rotatedImage.setRGB(height - y - 1, x, currentImage.getRGB(x, y)); // Rotate 90 degrees clockwise
-                } else {
-                    rotatedImage.setRGB(y, width - x - 1, currentImage.getRGB(x, y)); // Rotate 90 degrees counter-clockwise
-                }
-            }
-        }
-
-        currentImage = rotatedImage;
-        displayImage(currentImage, true);
-    }
-
-    // 4. 3. Espelhamento vertical e horizontal; 
-    private void flipImage(boolean horizontal, boolean vertical) {
-        int width = currentImage.getWidth();
-        int height = currentImage.getHeight();
-
-        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if(horizontal) {
-                    segmentedImage.setRGB(width - x - 1, y, currentImage.getRGB(x, y)); // Horizontal flip
-                }
-                if(vertical) {
-                    segmentedImage.setRGB(x, height - y - 1, currentImage.getRGB(x, y)); // Vertical flip
-                }
-            }
-        }
-
-        currentImage = segmentedImage;
-        displayImage(currentImage, true);
-    }
+    // 2. Pesquisar e desenvolver um programa que permita ler um dos arquivos PNM e visualizar a
+    // imagem na tela. O programa deverá permitir também a exportação da imagem para GIF ou BMP
+    // ou JPG ou PNG. Escolher apenas um dos seis formatos apresentados abaixo:
+    // 1. Formato PBM (P1)
+    // 2. Formato PBM (P4)
+    // 3. Formato PGM (P2)
+    // 4. Formato PGM (P5)
+    // 5. Formato PPM (P3)
+    // 6. Formato PPM (P6) 
 
 
+    // 6. Formato PPM (P6) 
     private void openPPMImage() {
         JFileChooser fileChooser = new JFileChooser(new File("images"));
         FileNameExtensionFilter filter = new FileNameExtensionFilter("PPM Images", "ppm");
@@ -431,25 +391,6 @@ public class NewJFrame extends javax.swing.JFrame {
             readPPMImage(fileChooser.getSelectedFile());
         }
     }
-
-    private static final char START_OF_COMMENT = '#';
-	private static final char SPACE_CHARACTER = ' ';
-	private static final char END_OF_LINE = '\n';
-
-    private static BufferedInputStream reader;
-    private static int processCharacters(char aChar) throws IOException {
-		StringBuilder characters = new StringBuilder();
-		char ch;		
-		while ( ( ch = (char) reader.read() ) != aChar ) {
-        	if ( ch == START_OF_COMMENT ) {
-        		while ( reader.read() != END_OF_LINE );
-        		continue;
-        	}
-        	characters.append(ch);
-        }
-		return Integer.valueOf(characters.toString());
-	}
-
 
     private void readPPMImage(File file){
         try {
@@ -504,6 +445,8 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
 
+    
+    // 4. Formato PGM (P5)
     private void openPGMImage() {
         JFileChooser fileChooser = new JFileChooser(new File("images"));
         FileNameExtensionFilter filter = new FileNameExtensionFilter("PGM Images", "pgm");
@@ -514,7 +457,6 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
     
-    // Function to read a PGM P5 image
     private void readPGMImage(File file) {
         try {
             reader = new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
@@ -565,25 +507,10 @@ public class NewJFrame extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error reading PGM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
 
-    // Display the image on the JLabel
-    private void displayImage(BufferedImage image, boolean resize) {
-        ImageIcon icon = new ImageIcon(image);
-        if (!isImageDisplayed) {
-            imageLabel.setIcon(icon);
-            Container contentPane = getContentPane();
-            contentPane.setLayout(new GridLayout());
-            contentPane.add(new JScrollPane(imageLabel));
-            isImageDisplayed = true;
-        } else {
-            imageLabel.setIcon(icon);
-        }
-        if (resize) {
-            setSize(image.getWidth() + 25, image.getHeight() + 70);
-        }
-    }
-
+    // 3. Desenvolver um método para segmentar uma imagem no formato RGB mantendo na imagem os
+    // objetos de uma determinada cor e o restante da imagem na cor preta. O usuário deverá entrar com o
+    // RGB da cor desejada. 
     private void buildColorSegmentationEffect() {
         JColorChooser colorChooser = new JColorChooser();
         JDialog colorDialog = JColorChooser.createDialog(this, "Select Target Color", true, colorChooser, e -> {
@@ -599,6 +526,115 @@ public class NewJFrame extends javax.swing.JFrame {
 
         colorDialog.setVisible(true);
     }
+
+    private void applyColorSegmentation(int targetRed, int targetGreen, int targetBlue) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                
+                
+                int maxValueRed = targetRed + 50;
+                int minValueRed = targetRed - 50;
+                boolean isCloseToRedColor = originalColor.getRed() >= minValueRed && originalColor.getRed() <= maxValueRed;
+
+                int maxValueGreen = targetGreen + 50;
+                int minValueGreen = targetGreen - 50;
+                boolean isCloseToGreenColor = originalColor.getGreen() >= minValueGreen && originalColor.getGreen() <= maxValueGreen;
+
+                int maxValueBlue = targetBlue + 50;
+                int minValueBlue = targetBlue - 50;
+                boolean isCloseToBlueColor = originalColor.getBlue() >= minValueBlue && originalColor.getBlue() <= maxValueBlue;
+
+                boolean isCloseToTargetColor = isCloseToRedColor && isCloseToGreenColor && isCloseToBlueColor;
+                if (isCloseToTargetColor) {
+                    segmentedImage.setRGB(x, y, originalColor.getRGB());
+                } else {
+                    segmentedImage.setRGB(x, y, Color.BLACK.getRGB());
+                }
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage, true);
+    }
+    
+
+    // 4. Pesquisar e implementar apenas dois dos itens abaixo:
+    // 1. Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
+    // 2. Rotação da imagem em diferentes ângulos (qualquer grau inteiro);
+    // 3. Espelhamento vertical e horizontal;
+    // 4. Ampliação (zoom in) em 2x (dobro do tamanho) e redução (zoom out) 0,5x (metade do
+    // tamanho);
+    // 5. Correção gamma;
+    // 6. Implementação de duas operações aritméticas (+, -, *, /) ou lógicas (and, or, xor)
+    // (envolvendo duas imagens em escala de cinza);
+    // 7. Equalização de histograma;
+    // 8. Compressão de histograma (Output cropping)
+    // 9. Expansão de histograma (Input cropping)
+    // 10. Dithering (implementar um dos algoritmos estudados);
+    // 11. Efeito Oil Paint (pintura a óleo);
+    // 12. Efeito Wave;
+    // 13. Efeito Warp;
+    // 14. Efeito Swirl;
+    // 15. Efeito Glass;
+    // 16. Efeito Pixelize (quadricular);
+    // 17. Redução do vermelho nos olhos;
+    // 18. Inserir molduras em imagens (utilizar o valor do alpha de arquivos PNG); 
+
+
+    // 4. 1) Rotação da imagem no sentido horário e anti-horário (com ângulos de 90º);
+    private void rotateImage90Degrees(boolean clockwise) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+
+        // Necessário para quando imagem não for quadrada
+        BufferedImage rotatedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (clockwise) {
+                    rotatedImage.setRGB(height - y - 1, x, currentImage.getRGB(x, y)); // Rotate 90 degrees clockwise
+                } else {
+                    rotatedImage.setRGB(y, width - x - 1, currentImage.getRGB(x, y)); // Rotate 90 degrees counter-clockwise
+                }
+            }
+        }
+
+        currentImage = rotatedImage;
+        displayImage(currentImage, true);
+    }
+
+    // 4. 3. Espelhamento vertical e horizontal; 
+    private void flipImage(boolean horizontal, boolean vertical) {
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+
+        BufferedImage segmentedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if(horizontal) {
+                    segmentedImage.setRGB(width - x - 1, y, currentImage.getRGB(x, y)); // Horizontal flip
+                }
+                if(vertical) {
+                    segmentedImage.setRGB(x, height - y - 1, currentImage.getRGB(x, y)); // Vertical flip
+                }
+            }
+        }
+
+        currentImage = segmentedImage;
+        displayImage(currentImage, true);
+    }
+
+    // Exit application
+    private void exitApplication(java.awt.event.ActionEvent evt) {
+        System.exit(0);
+    }
+
 
     // Main method to run the application
     public static void main(String[] args) {
