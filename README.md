@@ -107,6 +107,12 @@ NewX = OldX
 NewY = Height - OldY - 1
 ```
 
+### `openPPMImage`
+This method allows the user to open and display PPM (Portable Pixmap) images. It reads the PPM file format, extracts pixel data, and converts it into a BufferedImage for display in the application.
+
+### `openPGMImage`
+This method allows the user to open and display PGM (Portable Graymap) images. It reads the PGM file format, extracts grayscale pixel data, and converts it into a BufferedImage for display in the application.
+
 ## Screenshots
 
 ### Main Interface
