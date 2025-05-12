@@ -428,7 +428,7 @@ public class NewJFrame extends javax.swing.JFrame {
         fileChooser.setFileFilter(filter);
         int option = fileChooser.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
-            readPPMImage2(fileChooser.getSelectedFile());
+            readPPMImage(fileChooser.getSelectedFile());
         }
     }
 
@@ -451,7 +451,7 @@ public class NewJFrame extends javax.swing.JFrame {
 	}
 
 
-    private void readPPMImage2(File file){
+    private void readPPMImage(File file){
         try {
             reader = new BufferedInputStream( new FileInputStream(file.getAbsolutePath()) );
             final char header1 = (char) reader.read();
@@ -498,56 +498,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
             currentImage = bitmap;
             displayImage(currentImage, true);
-            // applyGrayscaleEffect(null);
 
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error reading PPM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    // Function to read a PPM P6 image
-    private void readPPMImage(File file) {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            // Read header
-            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-            String format = br.readLine();
-            if (!"P6".equals(format)) {
-                throw new IOException("Invalid PPM format");
-            }
-
-            // Skip comments
-            String line;
-            do {
-                line = br.readLine();
-            } while (line.startsWith("#"));
-
-            // Read dimensions
-            String[] dimensions = line.split(" ");
-            int width = Integer.parseInt(dimensions[0]);
-            int height = Integer.parseInt(dimensions[1]);
-
-            // Read max color value
-            int maxColor = Integer.parseInt(br.readLine());
-            if (maxColor != 255) {
-                throw new IOException("Unsupported max color value");
-            }
-
-            // Read pixel data
-            byte[] pixelData = fis.readAllBytes();
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            int index = 0;
-            for (int y = 0; y < height - 1; y++) {
-                for (int x = 0; x < width - 1; x++) {
-                    int r = pixelData[index++] & 0xFF;
-                    int g = pixelData[index++] & 0xFF;
-                    int b = pixelData[index++] & 0xFF;
-                    int rgb = (r << 16) | (g << 8) | b;
-                    image.setRGB(x, y, rgb);
-                }
-            }
-
-            currentImage = image;
-            displayImage(currentImage, true);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error reading PPM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -565,49 +516,56 @@ public class NewJFrame extends javax.swing.JFrame {
     
     // Function to read a PGM P5 image
     private void readPGMImage(File file) {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            // Read header
-            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-            String format = br.readLine();
-            if (!"P5".equals(format)) {
-                throw new IOException("Invalid PGM format");
+        try {
+            reader = new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
+            final char header1 = (char) reader.read();
+            final char header2 = (char) reader.read();
+            final char header3 = (char) reader.read();
+    
+            if (header1 != 'P' || header2 != '5' || header3 != END_OF_LINE) {
+                System.out.println("Error: Invalid PGM format.");
+                return;
             }
-
-            // Skip comments
-            String line;
-            do {
-                line = br.readLine();
-            } while (line.startsWith("#"));
-
-            // Read dimensions
-            String[] dimensions = line.split(" ");
-            int width = Integer.parseInt(dimensions[0]);
-            int height = Integer.parseInt(dimensions[1]);
-
-            // Read max gray value
-            int maxGray = Integer.parseInt(br.readLine());
-            if (maxGray != 255) {
-                throw new IOException("Unsupported max gray value");
+    
+            final int width = processCharacters(SPACE_CHARACTER);
+            final int height = processCharacters(END_OF_LINE);
+            final int maxGrayValue = processCharacters(END_OF_LINE);
+    
+            if (maxGrayValue < 0 || maxGrayValue > 255) {
+                reader.close();
+                throw new IllegalArgumentException("Maximum grayscale value is outside the range 0..255");
             }
-
-            // Read pixel data
-            byte[] pixelData = fis.readAllBytes();
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-            int index = 0;
+    
+            // Skip comment lines if present
+            reader.mark(1);
+            while (reader.read() == START_OF_COMMENT) {
+                while (reader.read() != END_OF_LINE);
+                reader.mark(1);
+            }
+            reader.reset();
+    
+            BufferedImage bitmap = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+    
+            byte[] buffer = new byte[width];
             for (int y = 0; y < height; y++) {
+                reader.read(buffer, 0, buffer.length);
                 for (int x = 0; x < width; x++) {
-                    int gray = pixelData[index++] & 0xFF;
-                    int rgb = (gray << 16) | (gray << 8) | gray;
-                    image.setRGB(x, y, rgb);
+                    int gray = Byte.toUnsignedInt(buffer[x]);
+                    Color color = new Color(gray, gray, gray);
+                    bitmap.setRGB(x, y, color.getRGB());
                 }
             }
-
-            currentImage = image;
+    
+            reader.close();
+    
+            currentImage = bitmap;
             displayImage(currentImage, true);
+    
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error reading PGM file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
 
     // Display the image on the JLabel
     private void displayImage(BufferedImage image, boolean resize) {
