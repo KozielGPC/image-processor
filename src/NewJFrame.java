@@ -39,66 +39,66 @@ public class NewJFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         // File menu setup
-        fileMenu.setText("File");
+        fileMenu.setText("Arquivo");
 
-        openMenuItem.setText("Open...");
+        openMenuItem.setText("Abrir...");
         openMenuItem.addActionListener(evt -> openImage(evt));
         fileMenu.add(openMenuItem);
 
-        openPPMMenuItem.setText("Open PPM...");
+        openPPMMenuItem.setText("Abrir PPM...");
         openPPMMenuItem.addActionListener(evt -> openPPMImage());
         fileMenu.add(openPPMMenuItem);
 
-        openPGMMenuItem.setText("Open PGM...");
+        openPGMMenuItem.setText("Abrir PGM...");
         openPGMMenuItem.addActionListener(evt -> openPGMImage());
         fileMenu.add(openPGMMenuItem);
 
-        saveMenuItem.setText("Save...");
+        saveMenuItem.setText("Salvar...");
         saveMenuItem.addActionListener(evt -> saveImage(evt));
         fileMenu.add(saveMenuItem);
 
-        exitMenuItem.setText("Exit");
+        exitMenuItem.setText("Sair");
         exitMenuItem.addActionListener(evt -> exitApplication(evt));
         fileMenu.add(exitMenuItem);
 
         menuBar.add(fileMenu);
 
         // Image menu setup
-        imageMenu.setText("Image");
+        imageMenu.setText("Imagem");
 
-        negativeMenuItem.setText("Negative");
+        negativeMenuItem.setText("Negativo");
         negativeMenuItem.addActionListener(evt -> applyNegativeEffect(evt));
         imageMenu.add(negativeMenuItem);
 
-        grayscaleMenuItem.setText("Grayscale");
+        grayscaleMenuItem.setText("Tons de Cinza");
         grayscaleMenuItem.addActionListener(evt -> applyGrayscaleEffect(evt));
         imageMenu.add(grayscaleMenuItem);
 
-        transparencyMenuItem.setText("Transparency Gradient");
+        transparencyMenuItem.setText("Gradiente de Transparência");
         transparencyMenuItem.addActionListener(evt -> buildTransparencyEffect());
         imageMenu.add(transparencyMenuItem);
 
-        colorSegmentationMenuItem.setText("Color Segmentation");
+        colorSegmentationMenuItem.setText("Segmentação de Cor");
         colorSegmentationMenuItem.addActionListener(evt -> buildColorSegmentationEffect());
         imageMenu.add(colorSegmentationMenuItem);
 
-        rotateImageClockwiseMenuItem.setText("Rotate Clockwise");
+        rotateImageClockwiseMenuItem.setText("Rotacionar Horário");
         rotateImageClockwiseMenuItem.addActionListener(evt -> rotateImage90Degrees(true));
         imageMenu.add(rotateImageClockwiseMenuItem);
 
-        rotateImageCounterClockwiseMenuItem.setText("Rotate Counter-Clockwise");
+        rotateImageCounterClockwiseMenuItem.setText("Rotacionar Anti-horário");
         rotateImageCounterClockwiseMenuItem.addActionListener(evt -> rotateImage90Degrees(false));
         imageMenu.add(rotateImageCounterClockwiseMenuItem);
 
-        flipImageVerticalMenuItem.setText("Flip Vertical");
+        flipImageVerticalMenuItem.setText("Espelhar Verticalmente");
         flipImageVerticalMenuItem.addActionListener(evt -> flipImage(false, true));
         imageMenu.add(flipImageVerticalMenuItem);
 
-        flipImageHorizontalMenuItem.setText("Flip Horizontal");
+        flipImageHorizontalMenuItem.setText("Espelhar Horizontalmente");
         flipImageHorizontalMenuItem.addActionListener(evt -> flipImage(true, false));
         imageMenu.add(flipImageHorizontalMenuItem);
 
-        transparencyWithTwoImagesMenuItem.setText("Transparency with Two Images");
+        transparencyWithTwoImagesMenuItem.setText("Transparência com Duas Imagens");
         transparencyWithTwoImagesMenuItem.addActionListener(evt -> buildTwoImagesTransparencyEffect());
         imageMenu.add(transparencyWithTwoImagesMenuItem);
 
