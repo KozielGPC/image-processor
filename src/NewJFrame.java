@@ -36,6 +36,8 @@ public class NewJFrame extends javax.swing.JFrame {
         flipImageHorizontalMenuItem = new javax.swing.JMenuItem();
         transparencyWithTwoImagesMenuItem = new javax.swing.JMenuItem();
         saltAndPepperNoiseMenuItem = new javax.swing.JMenuItem();
+        meanFilterMenuItem = new javax.swing.JMenuItem();
+        medianFilterMenuItem = new javax.swing.JMenuItem();
         robertsEdgeMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -107,6 +109,15 @@ public class NewJFrame extends javax.swing.JFrame {
         saltAndPepperNoiseMenuItem.setText("Salt and Pepper Noise");
         saltAndPepperNoiseMenuItem.addActionListener(evt -> applySaltAndPepperNoise());
         imageMenu.add(saltAndPepperNoiseMenuItem);
+
+
+        meanFilterMenuItem.setText("Mean Filter");
+        meanFilterMenuItem.addActionListener(evt -> applyMeanFilter());
+        imageMenu.add(meanFilterMenuItem);
+
+        medianFilterMenuItem.setText("Median Filter");
+        medianFilterMenuItem.addActionListener(evt -> applyMedianFilter());
+        imageMenu.add(medianFilterMenuItem);
 
         robertsEdgeMenuItem.setText("Roberts Edge Detection");
         robertsEdgeMenuItem.addActionListener(evt -> applyRobertsEdgeDetection());
@@ -675,6 +686,74 @@ public class NewJFrame extends javax.swing.JFrame {
     }
 
 
+    // Filtro da Média para imagens em escala de cinza com ruído sal e pimenta
+    private void applyMeanFilter() {
+        if (currentImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+            JOptionPane.showMessageDialog(this, "Please load a grayscale image first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage filteredImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        int[] dx = {-1, 0, 1};
+        int[] dy = {-1, 0, 1};
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int sum = 0;
+                int count = 0;
+                for (int i : dx) {
+                    for (int j : dy) {
+                        int nx = x + i;
+                        int ny = y + j;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            int val = new Color(currentImage.getRGB(nx, ny)).getRed();
+                            sum += val;
+                            count++;
+                        }
+                    }
+                }
+                int mean = sum / count;
+                filteredImage.setRGB(x, y, new Color(mean, mean, mean).getRGB());
+            }
+        }
+        currentImage = filteredImage;
+        displayImage(currentImage, true);
+    }
+
+    // Filtro da Mediana para imagens em escala de cinza com ruído sal e pimenta
+    private void applyMedianFilter() {
+        if (currentImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+            JOptionPane.showMessageDialog(this, "Please load a grayscale image first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage filteredImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        int[] dx = {-1, 0, 1};
+        int[] dy = {-1, 0, 1};
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                java.util.List<Integer> values = new java.util.ArrayList<>();
+                for (int i : dx) {
+                    for (int j : dy) {
+                        int nx = x + i;
+                        int ny = y + j;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            int val = new Color(currentImage.getRGB(nx, ny)).getRed();
+                            values.add(val);
+                        }
+                    }
+                }
+                java.util.Collections.sort(values);
+                int median = values.get(values.size() / 2);
+                filteredImage.setRGB(x, y, new Color(median, median, median).getRGB());
+            }
+        }
+        currentImage = filteredImage;
+        displayImage(currentImage, true);
+    }
+
+
     // 2. Pesquisar e implementar apenas um dos seguintes algoritmos para detecção de bordas para uma imagem em
     // escala de cinza (Não utilizar bibliotecas prontas disponíveis que realizam o processamento solicitado):
     // a) Sobel
@@ -739,5 +818,7 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem flipImageHorizontalMenuItem;
     private javax.swing.JMenuItem transparencyWithTwoImagesMenuItem;
     private javax.swing.JMenuItem saltAndPepperNoiseMenuItem;
+    private javax.swing.JMenuItem meanFilterMenuItem;
+    private javax.swing.JMenuItem medianFilterMenuItem;
     private javax.swing.JMenuItem robertsEdgeMenuItem;
 }
