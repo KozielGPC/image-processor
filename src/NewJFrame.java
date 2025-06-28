@@ -35,6 +35,8 @@ public class NewJFrame extends javax.swing.JFrame {
         flipImageVerticalMenuItem = new javax.swing.JMenuItem();
         flipImageHorizontalMenuItem = new javax.swing.JMenuItem();
         transparencyWithTwoImagesMenuItem = new javax.swing.JMenuItem();
+        saltAndPepperNoiseMenuItem = new javax.swing.JMenuItem();
+        robertsEdgeMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -101,6 +103,14 @@ public class NewJFrame extends javax.swing.JFrame {
         transparencyWithTwoImagesMenuItem.setText("Transparency with Two Images");
         transparencyWithTwoImagesMenuItem.addActionListener(evt -> buildTwoImagesTransparencyEffect());
         imageMenu.add(transparencyWithTwoImagesMenuItem);
+
+        saltAndPepperNoiseMenuItem.setText("Salt and Pepper Noise");
+        saltAndPepperNoiseMenuItem.addActionListener(evt -> applySaltAndPepperNoise());
+        imageMenu.add(saltAndPepperNoiseMenuItem);
+
+        robertsEdgeMenuItem.setText("Roberts Edge Detection");
+        robertsEdgeMenuItem.addActionListener(evt -> applyRobertsEdgeDetection());
+        imageMenu.add(robertsEdgeMenuItem);
 
         menuBar.add(imageMenu);
 
@@ -231,14 +241,18 @@ public class NewJFrame extends javax.swing.JFrame {
         int width = currentImage.getWidth();
         int height = currentImage.getHeight();
 
+        // Create a new grayscale image of type TYPE_BYTE_GRAY
+        BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Color originalColor = new Color(currentImage.getRGB(x, y));
                 int grayValue = (int) (0.299 * originalColor.getRed() + 0.587 * originalColor.getGreen() + 0.114 * originalColor.getBlue());
-                Color grayColor = new Color(grayValue, grayValue, grayValue);
-                currentImage.setRGB(x, y, grayColor.getRGB());
+                int rgb = new Color(grayValue, grayValue, grayValue).getRGB();
+                grayImage.setRGB(x, y, rgb);
             }
         }
+        currentImage = grayImage;
         displayImage(currentImage, true);
     }
 
@@ -630,6 +644,70 @@ public class NewJFrame extends javax.swing.JFrame {
         displayImage(currentImage, true);
     }
 
+
+    // =================================== Trabalho 2 ===================================
+    // 1 Desenvolver uma função para escolher aleatoriamente 5% dos pixels, de uma imagem em escala de cinza, e definir
+    // seus valores para 255 (se pixel >127) ou 0 (se pixel  127) para obter uma imagem corrompida com ruído do tipo sal e
+    // pimenta. Implementar também o Filtro da Média e o Filtro da Mediana para serem aplicados em imagens em escala
+    // de cinza com o ruído sal e pimenta. Não utilizar bibliotecas prontas disponíveis que realizam o processamento
+    // solicitado;
+
+    private void applySaltAndPepperNoise() {
+        if (currentImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+            JOptionPane.showMessageDialog(this, "Please load a grayscale image first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage noisyImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Color originalColor = new Color(currentImage.getRGB(x, y));
+                int noise = (Math.random() < 0.05) ? (originalColor.getRed() > 127 ? 255 : 0) : originalColor.getRed();
+                noisyImage.setRGB(x, y, new Color(noise, noise, noise).getRGB());
+            }
+        }
+
+        currentImage = noisyImage;
+        displayImage(currentImage, true);
+    }
+
+
+    // 2. Pesquisar e implementar apenas um dos seguintes algoritmos para detecção de bordas para uma imagem em
+    // escala de cinza (Não utilizar bibliotecas prontas disponíveis que realizam o processamento solicitado):
+    // a) Sobel
+    // b) Prewitt
+    // c) Roberts
+    // d) Frei-Chen
+    // e) Canny
+    private void applyRobertsEdgeDetection() {
+        if (currentImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+            JOptionPane.showMessageDialog(this, "Please load a grayscale image first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
+        BufferedImage edgeImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int x = 0; x < width - 1; x++) {
+            for (int y = 0; y < height - 1; y++) {
+                int p1 = new Color(currentImage.getRGB(x, y)).getRed();
+                int p2 = new Color(currentImage.getRGB(x + 1, y + 1)).getRed();
+                int p3 = new Color(currentImage.getRGB(x + 1, y)).getRed();
+                int p4 = new Color(currentImage.getRGB(x, y + 1)).getRed();
+                int gx = p1 - p2;
+                int gy = p3 - p4;
+                int g = (int)Math.min(255, Math.sqrt(gx * gx + gy * gy));
+                edgeImage.setRGB(x, y, new Color(g, g, g).getRGB());
+            }
+        }
+        currentImage = edgeImage;
+        displayImage(currentImage, true);
+    }
+
+
     // Exit application
     private void exitApplication(java.awt.event.ActionEvent evt) {
         System.exit(0);
@@ -660,4 +738,6 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem flipImageVerticalMenuItem;
     private javax.swing.JMenuItem flipImageHorizontalMenuItem;
     private javax.swing.JMenuItem transparencyWithTwoImagesMenuItem;
+    private javax.swing.JMenuItem saltAndPepperNoiseMenuItem;
+    private javax.swing.JMenuItem robertsEdgeMenuItem;
 }
