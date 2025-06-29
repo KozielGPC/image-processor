@@ -2,14 +2,40 @@ import cv2 as cv
 import numpy as np
 from tkinter import filedialog, Tk, Button, Label, Menu, messagebox
 from PIL import Image, ImageTk
-import os
 
-
-# --- Coin color ranges (HSV) ---
-colors = {
-    "gold": ((15, 60, 80), (45, 255, 255)),  # Adjusted for Brazilian coins
-    "silver": ((0, 0, 120), (180, 60, 255)),  # Adjusted for Brazilian coins
-}
+COIN_CLASSES = [
+    {
+        "min_size": 300,
+        "value": 1.0,
+        "label": "1 real",
+        "color": (0, 255, 255),
+    },  # yellow
+    {
+        "min_size": 280,
+        "value": 0.25,
+        "label": "25 centavos",
+        "color": (0, 0, 255),
+    },  # red
+    {
+        "min_size": 250,
+        "value": 0.5,
+        "label": "50 centavos",
+        "color": (0, 255, 0),
+    },  # green
+    {
+        "min_size": 220,
+        "value": 0.10,
+        "label": "10 centavos",
+        "color": (255, 255, 255),
+    },  # white
+    {
+        "min_size": 200,
+        "value": 0.05,
+        "label": "5 centavos",
+        "color": (255, 255, 0),
+    },  # cyan
+]
+COIN_UNKNOWN = {"value": 0, "label": "Desconhecida", "color": (128, 128, 128)}
 
 
 class CoinDetectorGUI:
@@ -20,7 +46,6 @@ class CoinDetectorGUI:
         self.image_path = None
         self.cv_img = None
         self.tk_img = None
-        self.result_img = None
 
         # Menu
         menubar = Menu(master)
@@ -72,103 +97,123 @@ class CoinDetectorGUI:
         if self.cv_img is None:
             messagebox.showwarning("No Image", "Please open an image first.")
             return
-        image = self.cv_img.copy()
-        orig = image.copy()
-        st = 120
-        en = 60
-        grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        blur = cv.GaussianBlur(grey, (5, 5), 5)
-        canny = cv.Canny(blur, st, en)
+        processed_img, coin_info, total_value = self.process_image(self.cv_img)
+        self.annotate_and_show(processed_img, coin_info, total_value)
+
+    def process_image(self, img):
+        """Process the image and return annotated image, coin info list, and total value."""
+        img_copy = img.copy()
+        canny_img = self.preprocess_image(img_copy)
+        contours = self.find_coin_contours(canny_img)
+        coin_info = self.extract_coin_info(img_copy, contours)
+        total_value = sum([info["value"] for info in coin_info])
+        return img_copy, coin_info, total_value
+
+    def preprocess_image(self, img):
+        gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        blurred_img = cv.GaussianBlur(gray_img, (5, 5), 5)
+        canny_img = cv.Canny(blurred_img, 120, 60)
         kernel = np.ones((3, 3), np.uint8)
-        img_dil = cv.dilate(canny, kernel, iterations=2)
-        img_morph = cv.morphologyEx(img_dil, cv.MORPH_CLOSE, kernel)
+        dilated_img = cv.dilate(canny_img, kernel, iterations=2)
+        morph_img = cv.morphologyEx(dilated_img, cv.MORPH_CLOSE, kernel)
+        return morph_img
+
+    def find_coin_contours(self, morph_img):
         contours, _ = cv.findContours(
-            img_morph, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
+            morph_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
         )
-        coins = []
-        for i, contour in enumerate(contours):
+        return contours
+
+    def extract_coin_info(self, img, contours):
+        coin_info = []
+        for contour in contours:
             area = cv.contourArea(contour)
             perimeter = cv.arcLength(contour, True)
             epsilon = perimeter * 0.02
             approx = cv.approxPolyDP(contour, epsilon, True)
             x, y, w, h = cv.boundingRect(approx)
-            roi = image[y : y + h, x : x + w]
-            if roi.size > 0 and area > 1000:
-                cv.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv.circle(image, (x + w // 2, y + h // 2), w // 2, (0, 255, 0), 2)
-                hsv_roi = cv.cvtColor(roi, cv.COLOR_BGR2HSV)
-                coin_type = None
-                for coin, (lower, upper) in colors.items():
-                    mask = cv.inRange(hsv_roi, np.array(lower), np.array(upper))
-                    if np.any(mask):
-                        coin_type = coin
-                        break
-                if coin_type:
-                    coins.append((coin_type, area, x, y, w, h))
-        total = 0
-        for coin, area, x, y, w, h in coins:
-            if w > 300 and h > 300:
-                value = 1.0
-                label = "1 real"
-                color = (0, 255, 255)  # amarelo
-            elif w > 280 and h > 280:
-                value = 0.25
-                label = "25 centavos"
-                color = (0, 0, 255)  # vermelho
-            elif w > 250 and h > 250:
-                value = 0.5
-                label = "50 centavos"
-                color = (0, 255, 0)  # verde
-            elif w > 220 and h > 220:
-                value = 0.10
-                label = "10 centavos"
-                color = (255, 0, 0)  # azul
-            elif w > 200 and h > 200:
-                value = 0.05
-                label = "5 centavos"
-                color = (255, 255, 0)  # ciano
-            else:
-                value = 0
-                label = "Desconhecida"
-                color = (128, 128, 128)
-            total += value
-            if value > 0:
-                cv.putText(
-                    image,
-                    f"{label}",
-                    (x + w // 2, y + h // 2),
-                    cv.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    color,
-                    2,
+            if (
+                w > COIN_CLASSES[-1]["min_size"] and h > COIN_CLASSES[-1]["min_size"]
+            ):  # Check if width is above minimum size
+                cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv.circle(img, (x + w // 2, y + h // 2), w // 2, (0, 255, 0), 2)
+                value, label, color = self.classify_coin_by_size(w, h)
+                coin_info.append(
+                    {
+                        "area": area,
+                        "x": x,
+                        "y": y,
+                        "w": w,
+                        "h": h,
+                        "value": value,
+                        "label": label,
+                        "color": color,
+                    }
                 )
-        # Draw a filled rectangle for better visibility
-        text = f"Total = R${total:.2f}"
+        return coin_info
+
+    def classify_coin_by_size(self, width, height):
+        for coin in COIN_CLASSES:
+            if width > coin["min_size"] and height > coin["min_size"]:
+                return coin["value"], coin["label"], coin["color"]
+        return COIN_UNKNOWN["value"], COIN_UNKNOWN["label"], COIN_UNKNOWN["color"]
+
+    def annotate_and_show(self, img, coin_info, total_value):
+        for info in coin_info:
+            if info["value"] > 0:
+                # Draw filled rectangle behind label for better readability
+                label = f"{info['label']}"
+                font = cv.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.8
+                thickness = 2
+                text_size, _ = cv.getTextSize(label, font, font_scale, thickness)
+                text_w, text_h = text_size
+                center_x = info["x"] + info["w"] // 2
+                center_y = info["y"] + info["h"] // 2
+                rect_x1 = center_x - text_w // 2 - 6
+                rect_y1 = center_y - text_h // 2 - 6
+                rect_x2 = center_x + text_w // 2 + 6
+                rect_y2 = center_y + text_h // 2 + 6
+                cv.rectangle(
+                    img,
+                    (rect_x1, rect_y1),
+                    (rect_x2, rect_y2),
+                    (0, 0, 0),
+                    -1,
+                )
+                cv.putText(
+                    img,
+                    label,
+                    (center_x - text_w // 2, center_y + text_h // 2 - 4),
+                    font,
+                    font_scale,
+                    info["color"],
+                    thickness,
+                )
+        # Draw a filled rectangle for better visibility of total
+        text = f"Total = R${total_value:.2f}"
         font = cv.FONT_HERSHEY_SIMPLEX
         font_scale = 1.5
         thickness = 3
         text_size, _ = cv.getTextSize(text, font, font_scale, thickness)
         text_w, text_h = text_size
         x, y = 30, 50
-        # Draw filled rectangle (black background)
         cv.rectangle(
-            image,
+            img,
             (x - 10, y - text_h - 10),
             (x + text_w + 10, y + 10),
             (0, 0, 0),
             -1,
         )
-        # Draw white border
         cv.rectangle(
-            image,
+            img,
             (x - 10, y - text_h - 10),
             (x + text_w + 10, y + 10),
             (255, 255, 255),
             2,
         )
-        # Draw the text (white)
         cv.putText(
-            image,
+            img,
             text,
             (x, y),
             font,
@@ -176,7 +221,7 @@ class CoinDetectorGUI:
             (255, 255, 255),
             thickness,
         )
-        self.show_image(image)
+        self.show_image(img)
 
 
 if __name__ == "__main__":
