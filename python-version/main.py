@@ -41,8 +41,8 @@ COIN_UNKNOWN = {"value": 0, "label": "Desconhecida", "color": (128, 128, 128)}
 class CoinDetectorGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("Coin Detector")
-        self.master.geometry("1000x700")
+        self.master.title("Coin & Image Processor")
+        self.master.geometry("1200x800")
         self.image_path = None
         self.cv_img = None
         self.tk_img = None
@@ -57,17 +57,31 @@ class CoinDetectorGUI:
         detectmenu = Menu(menubar, tearoff=0)
         detectmenu.add_command(label="Detect Coins", command=self.detect_coins)
         menubar.add_cascade(label="Detect", menu=detectmenu)
+        # Add Image Processing dropdown menu
+        processmenu = Menu(menubar, tearoff=0)
+        processmenu.add_command(label="Grayscale", command=self.apply_grayscale)
+        processmenu.add_command(label="Mean Filter", command=self.apply_mean_filter)
+        processmenu.add_command(label="Median Filter", command=self.apply_median_filter)
+        processmenu.add_command(
+            label="Salt & Pepper Noise", command=self.apply_salt_and_pepper
+        )
+        processmenu.add_command(label="Roberts Edge", command=self.apply_roberts_edge)
+        menubar.add_cascade(label="Image Processing", menu=processmenu)
         master.config(menu=menubar)
 
         # Image display
         self.img_label = Label(master)
         self.img_label.pack(pady=10)
 
-        # Buttons
-        self.open_btn = Button(master, text="Open Image", command=self.select_image)
-        self.open_btn.pack(side="left", padx=10, pady=10)
-        self.detect_btn = Button(master, text="Detect Coins", command=self.detect_coins)
-        self.detect_btn.pack(side="left", padx=10, pady=10)
+        # Loading indicator
+        self.loading_label = Label(master, text="", fg="blue", font=("Arial", 14))
+        self.loading_label.pack(pady=5)
+
+        # Remove processing buttons (now in menu)
+        # self.open_btn = Button(master, text="Open Image", command=self.select_image)
+        # self.open_btn.pack(side="left", padx=10, pady=10)
+        # self.detect_btn = Button(master, text="Detect Coins", command=self.detect_coins)
+        # self.detect_btn.pack(side="left", padx=10, pady=10)
 
     def select_image(self):
         file_path = filedialog.askopenfilename(
@@ -83,6 +97,7 @@ class CoinDetectorGUI:
             self.show_image(self.cv_img)
 
     def show_image(self, img):
+        self.loading_label.config(text="")
         # Resize for display
         img_disp = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         h, w = img_disp.shape[:2]
@@ -97,6 +112,8 @@ class CoinDetectorGUI:
         if self.cv_img is None:
             messagebox.showwarning("No Image", "Please open an image first.")
             return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
         processed_img, coin_info, total_value = self.process_image(self.cv_img)
         self.annotate_and_show(processed_img, coin_info, total_value)
 
@@ -124,6 +141,9 @@ class CoinDetectorGUI:
         )
         return contours
 
+    # 3. Construir um programa que irá determinar o valor monetário em imagens de moedas de Real conforme exemplo
+    # abaixo. Esta é uma imagem colorida e você precisa construir maneiras de calcular a diferença de valor das moedas.
+    # Pode ser usado técnicas como segmentação de cor, análise do tamanho, etc.
     def extract_coin_info(self, img, contours):
         coin_info = []
         for contour in contours:
@@ -222,6 +242,128 @@ class CoinDetectorGUI:
             thickness,
         )
         self.show_image(img)
+
+    def apply_grayscale(self):
+        if self.cv_img is None:
+            messagebox.showwarning("No Image", "Please open an image first.")
+            return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
+        img = self.cv_img.copy()
+        gray = np.zeros(img.shape[:2], dtype=np.uint8)
+        for x in range(img.shape[0]):
+            for y in range(img.shape[1]):
+                b, g, r = img[x, y]
+                val = int(0.299 * r + 0.587 * g + 0.114 * b)
+                gray[x, y] = val
+        self.cv_img = cv.merge([gray, gray, gray])
+        self.show_image(self.cv_img)
+
+    def apply_mean_filter(self):
+        if self.cv_img is None:
+            messagebox.showwarning("No Image", "Please open an image first.")
+            return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
+        img = self.cv_img.copy()
+        # Convert to grayscale if not already
+        if len(img.shape) == 3:
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        h, w = img.shape
+        filtered = np.zeros_like(img)
+        for x in range(h):
+            for y in range(w):
+                vals = []
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < h and 0 <= ny < w:
+                            vals.append(img[nx, ny])
+                filtered[x, y] = int(np.mean(vals))
+        self.cv_img = cv.merge([filtered, filtered, filtered])
+        self.show_image(self.cv_img)
+
+    def apply_median_filter(self):
+        if self.cv_img is None:
+            messagebox.showwarning("No Image", "Please open an image first.")
+            return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
+        img = self.cv_img.copy()
+        # Convert to grayscale if not already
+        if len(img.shape) == 3:
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        h, w = img.shape
+        filtered = np.zeros_like(img)
+        for x in range(h):
+            for y in range(w):
+                vals = []
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < h and 0 <= ny < w:
+                            vals.append(img[nx, ny])
+                filtered[x, y] = int(np.median(vals))
+        self.cv_img = cv.merge([filtered, filtered, filtered])
+        self.show_image(self.cv_img)
+
+    # 1. O ruído do tipo "sal e pimenta" é um tipo de ruído impulsivo que se manifesta em imagens digitais como pontos
+    # esparsos pretos e brancos.
+    # Desenvolver uma função para escolher aleatoriamente 5% dos pixels, de uma imagem em escala de cinza, e definir
+    # seus valores para 255 (se pixel >127) ou 0 (se pixel ≤ 127) para obter uma imagem corrompida com ruído do tipo sal e
+    # pimenta. Implementar também o Filtro da Média e o Filtro da Mediana para serem aplicados em imagens em escala
+    # de cinza com o ruído sal e pimenta. Não utilizar bibliotecas prontas disponíveis que realizam o processamento
+    # solicitado;
+    def apply_salt_and_pepper(self):
+        if self.cv_img is None:
+            messagebox.showwarning("No Image", "Please open an image first.")
+            return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
+        img = self.cv_img.copy()
+        # Garantir que está em escala de cinza
+        if len(img.shape) == 3:
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        h, w = img.shape
+        noisy = img.copy()
+        num_pixels = int(0.05 * h * w)
+        # Seleciona 5% dos pixels aleatoriamente
+        indices = np.random.choice(h * w, num_pixels, replace=False)
+        for idx in indices:
+            x = idx // w
+            y = idx % w
+            noisy[x, y] = 255 if img[x, y] > 127 else 0
+        self.cv_img = cv.merge([noisy, noisy, noisy])
+        self.show_image(self.cv_img)
+
+    # 2. Pesquisar e implementar apenas um dos seguintes algoritmos para detecção de bordas para uma imagem em
+    # escala de cinza (Não utilizar bibliotecas prontas disponíveis que realizam o processamento solicitado):
+    # a) Sobel
+    # b) Prewitt
+    # c) Roberts
+    # d) Frei-Chen
+    # e) Canny
+    def apply_roberts_edge(self):
+        if self.cv_img is None:
+            messagebox.showwarning("No Image", "Please open an image first.")
+            return
+        self.loading_label.config(text="Processing...")
+        self.master.update_idletasks()
+        img = self.cv_img.copy()
+        # Garantir que está em escala de cinza
+        if len(img.shape) == 3:
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        h, w = img.shape
+        edge = np.zeros_like(img)
+        # Roberts cross operator
+        for x in range(h - 1):
+            for y in range(w - 1):
+                gx = int(img[x, y]) - int(img[x + 1, y + 1])
+                gy = int(img[x + 1, y]) - int(img[x, y + 1])
+                g = min(255, int(np.sqrt(gx * gx + gy * gy)))
+                edge[x, y] = g
+        self.cv_img = cv.merge([edge, edge, edge])
+        self.show_image(self.cv_img)
 
 
 if __name__ == "__main__":
