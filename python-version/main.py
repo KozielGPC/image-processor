@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from tkinter import filedialog, Tk, Button, Label, Menu, messagebox
+from tkinter import filedialog, Tk, Label, Menu, messagebox
 from PIL import Image, ImageTk
 
 COIN_CLASSES = [
@@ -38,7 +38,7 @@ COIN_CLASSES = [
 COIN_UNKNOWN = {"value": 0, "label": "Desconhecida", "color": (128, 128, 128)}
 
 
-class CoinDetectorGUI:
+class CoinDetectorAndImageProcessorGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Coin & Image Processor")
@@ -76,12 +76,6 @@ class CoinDetectorGUI:
         # Loading indicator
         self.loading_label = Label(master, text="", fg="blue", font=("Arial", 14))
         self.loading_label.pack(pady=5)
-
-        # Remove processing buttons (now in menu)
-        # self.open_btn = Button(master, text="Open Image", command=self.select_image)
-        # self.open_btn.pack(side="left", padx=10, pady=10)
-        # self.detect_btn = Button(master, text="Detect Coins", command=self.detect_coins)
-        # self.detect_btn.pack(side="left", padx=10, pady=10)
 
     def select_image(self):
         file_path = filedialog.askopenfilename(
@@ -321,13 +315,13 @@ class CoinDetectorGUI:
         self.loading_label.config(text="Processing...")
         self.master.update_idletasks()
         img = self.cv_img.copy()
-        # Garantir que está em escala de cinza
+        # Convert to grayscale if not already
         if len(img.shape) == 3:
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         h, w = img.shape
         noisy = img.copy()
         num_pixels = int(0.05 * h * w)
-        # Seleciona 5% dos pixels aleatoriamente
+        # Randomly select 5% of pixels
         indices = np.random.choice(h * w, num_pixels, replace=False)
         for idx in indices:
             x = idx // w
@@ -350,7 +344,7 @@ class CoinDetectorGUI:
         self.loading_label.config(text="Processing...")
         self.master.update_idletasks()
         img = self.cv_img.copy()
-        # Garantir que está em escala de cinza
+        # Convert to grayscale if not already
         if len(img.shape) == 3:
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         h, w = img.shape
@@ -368,5 +362,5 @@ class CoinDetectorGUI:
 
 if __name__ == "__main__":
     root = Tk()
-    app = CoinDetectorGUI(root)
+    app = CoinDetectorAndImageProcessorGUI(root)
     root.mainloop()
